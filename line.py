@@ -23,6 +23,9 @@ class Line:
 
         self.rule_on_file = {}
 
+        text_chars = bytearray({7, 8, 9, 10, 12, 13, 27} | set(range(0x20, 0x100)) - {0x7f})
+        self.is_binary_string = lambda bt: bool(bt.translate(None, text_chars))
+
     def get_line_select(self):
         if not os.path.exists('line.select'):
             self.raw_select_rule.add('*')
@@ -109,6 +112,13 @@ class Line:
         return file_line_count
 
     def read_line_count(self, file_name):
+
+        with open(file_name, 'rb') as f:
+            # judge binary file
+            if self.is_binary_string(f.read(1024)):
+                # maybe binary file, not counting lines
+                return 0
+
         count = 0
         for file_line in open(file_name):
             count += 1
